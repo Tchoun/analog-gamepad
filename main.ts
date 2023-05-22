@@ -1,3 +1,9 @@
+let VitB = 0
+let VitA = 0
+let DirB = 0
+let DirA = 0
+let Y = 0
+let X = 0
 radio.setGroup(1)
 pins.setPull(DigitalPin.P13, PinPullMode.PullNone)
 pins.setPull(DigitalPin.P15, PinPullMode.PullNone)
@@ -17,16 +23,45 @@ basic.forever(function () {
     } else if (input.buttonIsPressed(Button.B)) {
         radio.sendString("B")
     } else {
-        if (pins.analogReadPin(AnalogPin.P2) > 550 && (pins.analogReadPin(AnalogPin.P1) > 400 && pins.analogReadPin(AnalogPin.P1) < 600)) {
-            radio.sendValue("HAUT", pins.analogReadPin(AnalogPin.P2))
-        } else if (pins.analogReadPin(AnalogPin.P2) < 450 && (pins.analogReadPin(AnalogPin.P1) > 400 && pins.analogReadPin(AnalogPin.P1) < 600)) {
-            radio.sendValue("BAS", pins.analogReadPin(AnalogPin.P2))
-        } else if (pins.analogReadPin(AnalogPin.P1) < 450 && (pins.analogReadPin(AnalogPin.P2) > 400 && pins.analogReadPin(AnalogPin.P2) < 600)) {
-            radio.sendValue("GAUCHE", pins.analogReadPin(AnalogPin.P1))
-        } else if (pins.analogReadPin(AnalogPin.P1) > 550 && (pins.analogReadPin(AnalogPin.P2) > 400 && pins.analogReadPin(AnalogPin.P2) < 600)) {
-            radio.sendValue("DROITE", pins.analogReadPin(AnalogPin.P1))
+        X = Math.map(pins.analogReadPin(AnalogPin.P1), 0, 1023, -100, 100)
+        Y = Math.map(pins.analogReadPin(AnalogPin.P2), 0, 1023, -100, 100)
+        if (Y > X && Y > 5) {
+            DirA = 1
+            DirB = 1
+            if (X > 0) {
+                VitA = Math.abs(Y)
+                VitB = Math.abs(Y) - Math.abs(X)
+            } else {
+                VitA = Math.abs(Y) - Math.abs(X)
+                VitB = Math.abs(Y)
+            }
+        } else if (Y < X && Y < -5) {
+            DirA = -1
+            DirB = -1
+            if (X > 0) {
+                VitA = Math.abs(Y)
+                VitB = Math.abs(Y) - Math.abs(X)
+            } else {
+                VitA = Math.abs(Y) - Math.abs(X)
+                VitB = Math.abs(Y)
+            }
+        } else if (X > Y && X > 5) {
+            DirA = 1
+            DirB = -1
+            VitA = Math.abs(X) - Math.abs(Y)
+            VitB = Math.abs(X) - Math.abs(Y)
+        } else if (X < Y && X < -5) {
+            DirA = -1
+            DirB = 1
+            VitA = Math.abs(X) - Math.abs(Y)
+            VitB = Math.abs(X) - Math.abs(Y)
         } else {
-            radio.sendString("STOP")
+            VitA = 0
+            VitB = 0
+            DirA = 1
+            DirB = 1
         }
+        radio.sendValue("MA", DirA * VitA)
+        radio.sendValue("MB", DirB * VitB)
     }
 })
